@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="book-grid">
+    {% for book in books %}
+    <div class="book-card">
+        <h2>{{ book.title }}</h2>
+        <p><strong>Year Level:</strong> {{ book.yearlevel }}</p>
+        <p><strong>Course:</strong> {{ book.course }}</p>
+        <p>{{ book.description }}</p>
+        <a href="{{ url_for('view_pdf', filename=book.pdf) }}">View PDF</a>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <form action="{{ url_for('delete_book', book_index=loop.index0) }}" method="POST" style="display:inline;">
+            <button type="submit">Delete</button>
+        </form>
+        <a href="{{ url_for('edit_book', book_index=loop.index0) }}">Edit</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

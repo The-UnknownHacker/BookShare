@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form action="{{ url_for('add_book') }}" method="post" enctype="multipart/form-data" class="add-book-form">
+    <label for="title">Title</label>
+    <input type="text" id="title" name="title" required>
+
+    <label for="yearlevel">Year Level</label>
+    <input type="text" id="yearlevel" name="yearlevel" required>
+
+    <label for="course">Course</label>
+    <input type="text" id="course" name="course" required>
+
+    <label for="description">Description</label>
+    <textarea id="description" name="description"></textarea>
+
+    <label for="pdf">Upload PDF</label>
+    <input type="file" id="pdf" name="pdf" accept="application/pdf" required>
+
+    <button type="submit">Add Book</button>
+</form>
+{% endblock %}

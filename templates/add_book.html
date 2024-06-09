@@ -1,22 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
-<form action="{{ url_for('add_book') }}" method="post" enctype="multipart/form-data" class="add-book-form">
-    <label for="title">Title</label>
-    <input type="text" id="title" name="title" required>
-
-    <label for="yearlevel">Year Level</label>
-    <input type="text" id="yearlevel" name="yearlevel" required>
-
-    <label for="course">Course</label>
-    <input type="text" id="course" name="course" required>
-
-    <label for="description">Description</label>
-    <textarea id="description" name="description"></textarea>
-
-    <label for="pdf">Upload PDF</label>
-    <input type="file" id="pdf" name="pdf" accept="application/pdf" required>
-
-    <button type="submit">Add Book</button>
-</form>
+<div class="form-container">
+    <h2>Add Book</h2>
+    <form method="POST" action="{{ url_for('add_book') }}" enctype="multipart/form-data">
+        <label for="title">Title</label>
+        <input type="text" name="title" id="title" required>
+        <label for="yearlevel">Year Level</label>
+        <input type="text" name="yearlevel" id="yearlevel" required>
+        <label for="course">Course</label>
+        <input type="text" name="course" id="course" required>
+        <label for="description">Description</label>
+        <textarea name="description" id="description" required></textarea>
+        <label for="folder">Folder</label>
+        <select name="folder" id="folder" required>
+            {% for folder in folders %}
+            <option value="{{ folder.name }}">{{ folder.name }}</option>
+            {% endfor %}
+        </select>
+        <label for="pdf">PDF</label>
+        <input type="file" name="pdf" id="pdf" required>
+        <button type="submit">Add Book</button>
+    </form>
+</div>
 {% endblock %}

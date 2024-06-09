@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, send_from_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
 import json
-from models import User, Book, load_users, save_users, load_books, save_books
+from models import User, Book, Folder, load_users, save_users, load_books, save_books, load_folders, save_folders
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -13,6 +13,7 @@ login_manager.login_view = 'login'
 
 users = load_users()
 books = load_books()
+folders = load_folders()
 
 class UserLogin(UserMixin):
     def __init__(self, user):
@@ -30,7 +31,26 @@ def load_user(username):
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html', books=books)
+    folder = load_folders()
+    for folder in folders:
+        folder.books = [book for book in books if book.folder == folder.name]
+
+    return render_template('index.html', folders=folders)
+
+
+@app.route('/add_folder', methods=['GET', 'POST'])
+@login_required
+def add_folder():
+    if not current_user.is_admin:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        name = request.form['name']
+        folder = Folder(name)
+        folders.append(folder)
+        save_folders(folders)
+        return redirect(url_for('index'))
+    return render_template('add_folder.html')
 
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
@@ -44,17 +64,23 @@ def add_book():
         course = request.form['course']
         description = request.form['description']
         pdf = request.files['pdf']
-
+        folder_name = request.form.get('folder')  # Get the selected folder name
+        
         pdf_filename = None
         if pdf:
             pdf_filename = pdf.filename
             pdf.save(os.path.join(app.config['UPLOAD_FOLDER'], pdf_filename))
 
-        book = Book(title, yearlevel, course, description, pdf_filename)
+        # Create a new Book object with the selected folder name
+        book = Book(title, yearlevel, course, description, pdf_filename, folder=folder_name)
         books.append(book)
         save_books(books)
         return redirect(url_for('index'))
-    return render_template('add_book.html')
+    return render_template('add_book.html', folders=folders)
+
+
+
+
 
 @app.route('/uploads/<filename>')
 @login_required
@@ -119,13 +145,22 @@ def edit_book(book_index):
         book.yearlevel = request.form['yearlevel']
         book.course = request.form['course']
         book.description = request.form['description']
+        book.folder = request.form['folder']
         pdf = request.files['pdf']
         if pdf:
             book.pdf = pdf.filename
             pdf.save(os.path.join(app.config['UPLOAD_FOLDER'], book.pdf))
         save_books(books)
         return redirect(url_for('index'))
-    return render_template('edit_book.html', book=book)
+    return render_template('edit_book.html', book=book, folders=folders)
+
+
+@app.route('/folder/<folder>')
+@login_required
+def folder_books(folder):
+    folder_books = [book for book in books if book.folder == folder]
+    return render_template('folder_books.html', folder=folder, books=folder_books)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

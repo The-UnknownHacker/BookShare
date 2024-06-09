@@ -1,19 +1,8 @@
+<!-- folder_books.html -->
 {% extends "base.html" %}
 
 {% block content %}
-<div class="folders">
-    <div class="row">
-        {% for folder in folders %}
-        <div class="col-md-3">
-            <div class="folder-card">
-                <h3>{{ folder.name }}</h3>
-                <p>{{ folder.description }}</p>
-                <a href="{{ url_for('folder_books', folder=folder.name) }}" class="btn btn-primary">View Books</a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
+<h2>Books in {{ folder }}</h2>
 
 <div class="book-grid">
     {% for book in books %}
@@ -25,9 +14,9 @@
         <a href="{{ url_for('view_pdf', filename=book.pdf) }}">View PDF</a>
         {% if current_user.is_authenticated and current_user.is_admin %}
         <form action="{{ url_for('delete_book', book_index=loop.index0) }}" method="POST" style="display:inline;">
-            <button type="submit" class="btn btn-danger">Delete</button>
+            <button type="submit">Delete</button>
         </form>
-        <a href="{{ url_for('edit_book', book_index=loop.index0) }}" class="btn btn-primary">Edit</a>
+        <a href="{{ url_for('edit_book', book_index=loop.index0) }}">Edit</a>
         {% endif %}
     </div>
     {% endfor %}

@@ -14,6 +14,7 @@
             {% if current_user.is_authenticated %}
                 {% if current_user.is_admin %}
                     <a href="{{ url_for('add_book') }}">Add Book</a>
+                    <a href="{{ url_for('add_folder') }}">Add Folder</a>
                 {% endif %}
                 <a href="{{ url_for('logout') }}">Logout</a>
             {% else %}

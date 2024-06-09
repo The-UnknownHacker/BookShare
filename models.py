@@ -1,64 +1,67 @@
 import json
-import os
-from flask_bcrypt import Bcrypt
-
-bcrypt = Bcrypt()
 
 class User:
     def __init__(self, username, password, is_admin=False):
         self.username = username
-        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+        self.password = password
         self.is_admin = is_admin
 
     def check_password(self, password):
-        return bcrypt.check_password_hash(self.password, password)
-
-    def to_dict(self):
-        return {
-            'username': self.username,
-            'password': self.password,
-            'is_admin': self.is_admin
-        }
+        return self.password == password
 
 class Book:
-    def __init__(self, title, yearlevel, course, description, pdf):
+    def __init__(self, title, yearlevel, course, description, pdf, folder=None):
         self.title = title
         self.yearlevel = yearlevel
         self.course = course
         self.description = description
         self.pdf = pdf
+        self.folder = folder
 
-    def to_dict(self):
-        return {
-            'title': self.title,
-            'yearlevel': self.yearlevel,
-            'course': self.course,
-            'description': self.description,
-            'pdf': self.pdf
-        }
+class Folder:
+    def __init__(self, name, books=None):
+        self.name = name
+        self.books = books if books is not None else []
 
-# Load users from JSON file
+    def __str__(self):
+        return self.name
+
 def load_users():
-    if os.path.exists('users.json'):
+    try:
         with open('users.json', 'r') as f:
-            users_data = json.load(f)
-            return [User(**user) for user in users_data]
-    return []
+            users = json.load(f)
+            return [User(**user) for user in users]
+    except FileNotFoundError:
+        return []
 
-# Save users to JSON file
 def save_users(users):
     with open('users.json', 'w') as f:
-        json.dump([user.to_dict() for user in users], f)
+        json.dump([user.__dict__ for user in users], f)
 
-# Load books from JSON file
 def load_books():
-    if os.path.exists('books.json'):
+    try:
         with open('books.json', 'r') as f:
             books_data = json.load(f)
             return [Book(**book) for book in books_data]
-    return []
+    except FileNotFoundError:
+        return []
+    except json.JSONDecodeError:
+        return []
 
-# Save books to JSON file
 def save_books(books):
     with open('books.json', 'w') as f:
-        json.dump([book.to_dict() for book in books], f)
+        json.dump([book.__dict__ for book in books], f)
+
+def load_folders():
+    try:
+        with open('folders.json', 'r') as f:
+            folders_data = json.load(f)
+            return [Folder(**folder) for folder in folders_data]
+    except FileNotFoundError:
+        return []
+    except json.JSONDecodeError:
+        return []
+
+def save_folders(folders):
+    with open('folders.json', 'w') as f:
+        json.dump([folder.__dict__ for folder in folders], f)

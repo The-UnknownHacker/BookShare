@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Add Folder</h2>
+    <form method="POST" action="{{ url_for('add_folder') }}">
+        <label for="name">Folder Name</label>
+        <input type="text" name="name" id="name" required>
+        <button type="submit">Add Folder</button>
+    </form>
+</div>
+{% endblock %}

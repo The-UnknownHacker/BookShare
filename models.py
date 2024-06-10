@@ -1,4 +1,5 @@
 import json
+import uuid
 
 class User:
     def __init__(self, username, password, is_admin=False):
@@ -11,6 +12,7 @@ class User:
 
 class Book:
     def __init__(self, title, yearlevel, course, description, pdf, folder=None):
+        self.id = str(uuid.uuid4())
         self.title = title
         self.yearlevel = yearlevel
         self.course = course
@@ -18,19 +20,32 @@ class Book:
         self.pdf = pdf
         self.folder = folder
 
-class Folder:
-    def __init__(self, name, books=None):
-        self.name = name
-        self.books = books if books is not None else []
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'yearlevel': self.yearlevel,
+            'course': self.course,
+            'description': self.description,
+            'pdf': self.pdf,
+            'folder': self.folder
+        }
 
-    def __str__(self):
-        return self.name
+class Folder:
+    def __init__(self, name):
+        self.name = name
+        self.books = []
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'books': [book.to_dict() for book in self.books]
+        }
 
 def load_users():
     try:
         with open('users.json', 'r') as f:
-            users = json.load(f)
-            return [User(**user) for user in users]
+            return [User(**user) for user in json.load(f)]
     except FileNotFoundError:
         return []
 
@@ -41,27 +56,21 @@ def save_users(users):
 def load_books():
     try:
         with open('books.json', 'r') as f:
-            books_data = json.load(f)
-            return [Book(**book) for book in books_data]
+            return [Book(**book) for book in json.load(f)]
     except FileNotFoundError:
-        return []
-    except json.JSONDecodeError:
         return []
 
 def save_books(books):
     with open('books.json', 'w') as f:
-        json.dump([book.__dict__ for book in books], f)
+        json.dump([book.to_dict() for book in books], f)
 
 def load_folders():
     try:
         with open('folders.json', 'r') as f:
-            folders_data = json.load(f)
-            return [Folder(**folder) for folder in folders_data]
+            return [Folder(**folder) for folder in json.load(f)]
     except FileNotFoundError:
-        return []
-    except json.JSONDecodeError:
         return []
 
 def save_folders(folders):
     with open('folders.json', 'w') as f:
-        json.dump([folder.__dict__ for folder in folders], f)
+        json.dump([folder.to_dict() for folder in folders], f)

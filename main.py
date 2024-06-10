@@ -31,12 +31,7 @@ def load_user(username):
 @app.route('/')
 @login_required
 def index():
-    folder = load_folders()
-    for folder in folders:
-        folder.books = [book for book in books if book.folder == folder.name]
-
     return render_template('index.html', folders=folders)
-
 
 @app.route('/add_folder', methods=['GET', 'POST'])
 @login_required
@@ -78,10 +73,6 @@ def add_book():
         return redirect(url_for('index'))
     return render_template('add_book.html', folders=folders)
 
-
-
-
-
 @app.route('/uploads/<filename>')
 @login_required
 def uploaded_file(filename):
@@ -122,24 +113,27 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-@app.route('/delete/<int:book_index>', methods=['POST'])
+@app.route('/delete/<book_id>', methods=['POST'])
 @login_required
-def delete_book(book_index):
+def delete_book(book_id):
     if not current_user.is_admin:
         return redirect(url_for('index'))
     
-    if 0 <= book_index < len(books):
-        books.pop(book_index)
-        save_books(books)
+    global books
+    books = [book for book in books if book.id != book_id]
+    save_books(books)
     return redirect(url_for('index'))
 
-@app.route('/edit/<int:book_index>', methods=['GET', 'POST'])
+@app.route('/edit/<book_id>', methods=['GET', 'POST'])
 @login_required
-def edit_book(book_index):
+def edit_book(book_id):
     if not current_user.is_admin:
         return redirect(url_for('index'))
     
-    book = books[book_index]
+    book = next((b for b in books if b.id == book_id), None)
+    if not book:
+        return redirect(url_for('index'))
+
     if request.method == 'POST':
         book.title = request.form['title']
         book.yearlevel = request.form['yearlevel']
@@ -154,13 +148,11 @@ def edit_book(book_index):
         return redirect(url_for('index'))
     return render_template('edit_book.html', book=book, folders=folders)
 
-
 @app.route('/folder/<folder>')
 @login_required
 def folder_books(folder):
     folder_books = [book for book in books if book.folder == folder]
     return render_template('folder_books.html', folder=folder, books=folder_books)
-
 
 if __name__ == '__main__':
     app.run(debug=True)

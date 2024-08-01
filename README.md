@@ -11,4 +11,3 @@ To use just clone it, create an empty /uploads folder and  install the requirmen
 then run the main.py file and start adding books
 
 
-[![The-UnknownHacker's GitHub stats](https://github-readme-stats.vercel.app/api?username=The-UnknownHacker)](https://github.com/The-UnknownHacker/github-readme-stats)

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pdf-container">
+    <div class="pdf-controls">
+        <div class="nav-controls">
+            <button id="prev" class="toolbar-btn">◀</button>
+            <div class="page-info">
+                <input type="number" id="pageNum" value="{{ position.page if position else 1 }}" min="1">
+                <span>/ <span id="pageCount">0</span></span>
+            </div>
+            <button id="next" class="toolbar-btn">▶</button>
+        </div>
+        <div class="zoom-controls">
+            <button id="zoomOut" class="toolbar-btn">−</button>
+            <select id="zoomSelect" class="zoom-select">
+                <option value="0.5">50%</option>
+                <option value="1">100%</option>
+                <option value="1.5" selected>150%</option>
+                <option value="2">200%</option>
+            </select>
+            <button id="zoomIn" class="toolbar-btn">+</button>
+        </div>
+    </div>
+    <div id="viewerContainer">
+        <canvas id="pdfViewer"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const viewer = {
+    pdfDoc: null,
+    pageNum: {{ position.page if position else 1 }},
+    scale: 1.5,
+    canvas: document.getElementById('pdfViewer'),
+    ctx: document.getElementById('pdfViewer').getContext('2d'),
+    lastSavedPage: {{ position.page if position else 1 }},
+
+    async init() {
+        try {
+            const loadingTask = pdfjsLib.getDocument("{{ url_for('uploaded_file', filename=filename) }}");
+            this.pdfDoc = await loadingTask.promise;
+            document.getElementById('pageCount').textContent = this.pdfDoc.numPages;
+            this.render();
+            this.setupListeners();
+            this.setupAutoSave();
+        } catch (err) {
+            console.error('Error loading PDF:', err);
+        }
+    },
+
+    async render() {
+        try {
+            const page = await this.pdfDoc.getPage(this.pageNum);
+            const viewport = page.getViewport({ scale: this.scale });
+
+            this.canvas.height = viewport.height;
+            this.canvas.width = viewport.width;
+
+            await page.render({
+                canvasContext: this.ctx,
+                viewport: viewport
+            }).promise;
+
+            document.getElementById('pageNum').value = this.pageNum;
+        } catch (err) {
+            console.error('Error rendering page:', err);
+        }
+    },
+
+    setupListeners() {
+        document.getElementById('prev').onclick = () => {
+            if (this.pageNum <= 1) return;
+            this.pageNum--;
+            this.render();
+        };
+
+        document.getElementById('next').onclick = () => {
+            if (this.pageNum >= this.pdfDoc.numPages) return;
+            this.pageNum++;
+            this.render();
+        };
+
+        document.getElementById('pageNum').onchange = (e) => {
+            const num = parseInt(e.target.value);
+            if (num && num > 0 && num <= this.pdfDoc.numPages) {
+                this.pageNum = num;
+                this.render();
+            }
+        };
+
+        document.getElementById('zoomIn').onclick = () => {
+            this.scale = Math.min(this.scale * 1.25, 3.0);
+            document.getElementById('zoomSelect').value = this.scale;
+            this.render();
+        };
+
+        document.getElementById('zoomOut').onclick = () => {
+            this.scale = Math.max(this.scale / 1.25, 0.5);
+            document.getElementById('zoomSelect').value = this.scale;
+            this.render();
+        };
+
+        document.getElementById('zoomSelect').onchange = (e) => {
+            this.scale = parseFloat(e.target.value);
+            this.render();
+        };
+    },
+
+    setupAutoSave() {
+        setInterval(() => {
+            if (this.pageNum !== this.lastSavedPage) {
+                this.lastSavedPage = this.pageNum;
+                fetch("{{ url_for('save_pdf_position', book_id=book.id) }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ page: this.pageNum })
+                }).catch(error => console.error('Error saving position:', error));
+            }
+        }, 2000);
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => viewer.init());
+</script>
+{% endblock %} 

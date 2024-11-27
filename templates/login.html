@@ -1,16 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="login-container">
-    <div class="login-form">
-        <h2>Login to BookShare</h2>
-        <form method="POST" action="{{ url_for('login') }}">
-            <label for="username">Username</label>
-            <input type="text" name="username" id="username" placeholder="Enter your username" required>
-            <label for="password">Password</label>
-            <input type="password" name="password" id="password" placeholder="Enter your password" required>
-            <button type="submit">Login</button>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>Welcome Back</h2>
+            <p class="auth-subtitle">Please sign in to continue</p>
+        </div>
+        
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <div class="input-group">
+                    <span class="input-icon">👤</span>
+                    <input type="text" id="username" name="username" class="form-input" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <div class="input-group">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" id="password" name="password" class="form-input" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
         </form>
+        
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{{ url_for('register') }}" class="text-primary">Sign up</a></p>
+        </div>
     </div>
 </div>
 {% endblock %}

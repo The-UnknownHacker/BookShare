@@ -1,39 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ current_user.is_authenticated and UserSettings.query.filter_by(user_id=current_user.user.id).first().theme or 'light' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>BookShare</title>
 </head>
 <body>
-    <header>
-        <h1>BookShare</h1>
-        <nav>
-            <a href="{{ url_for('index') }}">Home</a>
-            {% if current_user.is_authenticated %}
-                {% if current_user.is_admin %}
-                    <a href="{{ url_for('add_book') }}">Add Book</a>
-                    <a href="{{ url_for('add_folder') }}">Add Folder</a>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1>BookShare</h1>
+            </div>
+            <div class="sidebar-menu">
+                <a href="{{ url_for('index') }}" class="menu-item">
+                    <span class="icon">📚</span>
+                    <span>Home</span>
+                </a>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin %}
+                        <a href="{{ url_for('add_book') }}" class="menu-item">
+                            <span class="icon">➕</span>
+                            <span>Add Book</span>
+                        </a>
+                        <a href="{{ url_for('add_folder') }}" class="menu-item">
+                            <span class="icon">📁</span>
+                            <span>Add Folder</span>
+                        </a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="menu-item">
+                        <span class="icon">🚪</span>
+                        <span>Logout</span>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="menu-item">
+                        <span class="icon">🔑</span>
+                        <span>Login</span>
+                    </a>
+                    <a href="{{ url_for('register') }}" class="menu-item">
+                        <span class="icon">📝</span>
+                        <span>Register</span>
+                    </a>
                 {% endif %}
-                <a href="{{ url_for('logout') }}">Logout</a>
-            {% else %}
-                <a href="{{ url_for('login') }}">Login</a>
-                <a href="{{ url_for('register') }}">Register</a>
-            {% endif %}
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="menu-item">
+                        <span class="icon">⚙️</span>
+                        <span>Admin Panel</span>
+                    </a>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('settings') }}" class="menu-item">
+                        <span class="icon">⚙️</span>
+                        <span>Settings</span>
+                    </a>
+                {% endif %}
+            </div>
         </nav>
-    </header>
-    <div class="main">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flashes">
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
-        {% block content %}{% endblock %}
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash-message {{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
     </div>
 </body>
 </html>

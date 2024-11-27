@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pdf-container">
+    <iframe 
+        id="pdfViewer"
+        src="https://mozilla.github.io/pdf.js/web/viewer.html?file={{ url_for('uploaded_file', filename=filename, _external=True) }}#page={{ position.page if position else 1 }}&zoom=150"
+        frameborder="0"
+        width="100%"
+        height="100%">
+    </iframe>
+</div>
+
+<script>
+let currentPage = {{ position.page if position else 1 }};
+const viewer = document.getElementById('pdfViewer');
+
+// Save position periodically
+setInterval(() => {
+    try {
+        if (viewer.contentWindow && viewer.contentWindow.PDFViewerApplication) {
+            const newPage = viewer.contentWindow.PDFViewerApplication.page;
+            if (newPage && newPage !== currentPage) {
+                currentPage = newPage;
+                fetch("{{ url_for('save_pdf_position', book_id=book.id) }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ page: currentPage })
+                }).catch(error => console.error('Error saving position:', error));
+            }
+        }
+    } catch (e) {
+        console.error('Error saving page:', e);
+    }
+}, 2000);
+</script>
+
+<style>
+.pdf-container {
+    width: 100%;
+    height: calc(100vh - 64px);
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    background: #f8fafc;
+}
+
+#pdfViewer {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+</style>
+{% endblock %} 

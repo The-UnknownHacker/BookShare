@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="settings-header">
+        <h2>Settings</h2>
+        <p class="settings-subtitle">Customize your experience</p>
+    </div>
+
+    <div class="settings-section">
+        <h3>Appearance</h3>
+        <form method="POST" action="{{ url_for('save_settings') }}" class="settings-form">
+            <div class="form-group">
+                <label class="form-label">
+                    Theme
+                    <select name="theme" class="form-input">
+                        <option value="light" {% if settings.theme == 'light' %}selected{% endif %}>
+                            Light Mode
+                        </option>
+                        <option value="dark" {% if settings.theme == 'dark' %}selected{% endif %}>
+                            Dark Mode
+                        </option>
+                    </select>
+                </label>
+                <p class="setting-description">
+                    Choose between light and dark color schemes for the interface.
+                </p>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

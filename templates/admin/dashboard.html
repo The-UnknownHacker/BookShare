@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="dashboard-header">
+        <h1>Admin Dashboard</h1>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <h3>Total Users</h3>
+                <p class="stat-value">{{ stats.total_users }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-content">
+                <h3>Total Books</h3>
+                <p class="stat-value">{{ stats.total_books }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📁</div>
+            <div class="stat-content">
+                <h3>Total Folders</h3>
+                <p class="stat-value">{{ stats.total_folders }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🚫</div>
+            <div class="stat-content">
+                <h3>Banned Users</h3>
+                <p class="stat-value">{{ stats.banned_users }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-section">
+        <div class="section-header">
+            <h2>User Management</h2>
+            <button class="btn btn-primary" onclick="document.getElementById('addUserModal').style.display='block'">
+                Add User
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Created</th>
+                        <th>Last Login</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}</td>
+                        <td>
+                            <span class="status-badge {% if user.is_banned %}status-banned{% elif user.is_admin %}status-admin{% else %}status-active{% endif %}">
+                                {% if user.is_banned %}Banned{% elif user.is_admin %}Admin{% else %}Active{% endif %}
+                            </span>
+                        </td>
+                        <td class="actions">
+                            <form method="POST" action="{{ url_for('admin_toggle_admin', user_id=user.id) }}" class="inline-form">
+                                <button type="submit" class="btn-icon" title="Toggle Admin">
+                                    {% if user.is_admin %}👑{% else %}👤{% endif %}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin_toggle_ban', user_id=user.id) }}" class="inline-form">
+                                <button type="submit" class="btn-icon" title="Toggle Ban">
+                                    {% if user.is_banned %}✅{% else %}🚫{% endif %}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}" class="inline-form">
+                                <button type="submit" class="btn-icon" title="Delete User" onclick="return confirm('Are you sure you want to delete this user?')">
+                                    🗑️
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="addUserModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="document.getElementById('addUserModal').style.display='none'">&times;</span>
+        <h2>Add New User</h2>
+        <form method="POST" action="{{ url_for('admin_add_user') }}" class="form-container">
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" name="is_admin">
+                    <span class="form-check-label">Make Admin</span>
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Add User</button>
+        </form>
+    </div>
+</div>
+{% endblock %} 

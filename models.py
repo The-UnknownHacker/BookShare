@@ -1,16 +1,34 @@
-import json
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 
-class User:
-    def __init__(self, username, password, is_admin=False):
-        self.username = username
-        self.password = password
-        self.is_admin = is_admin
+db = SQLAlchemy()
 
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(120), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    is_banned = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    last_login = db.Column(db.DateTime)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+        
     def check_password(self, password):
-        return self.password == password
+        return check_password_hash(self.password_hash, password)
 
-class Book:
+class Book(db.Model):
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    title = db.Column(db.String(200), nullable=False)
+    yearlevel = db.Column(db.String(50))
+    course = db.Column(db.String(100))
+    description = db.Column(db.Text)
+    pdf = db.Column(db.String(200))
+    folder_id = db.Column(db.Integer, db.ForeignKey('folder.id'))
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
     def __init__(self, title, yearlevel, course, description, pdf, folder=None):
         self.id = str(uuid.uuid4())
         self.title = title
@@ -18,59 +36,43 @@ class Book:
         self.course = course
         self.description = description
         self.pdf = pdf
-        self.folder = folder
+        if folder:
+            self.folder_id = folder.id
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'title': self.title,
-            'yearlevel': self.yearlevel,
-            'course': self.course,
-            'description': self.description,
-            'pdf': self.pdf,
-            'folder': self.folder
-        }
+class Folder(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('folder.id'))
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    # Relationships
+    books = db.relationship('Book', backref='folder', lazy=True)
+    subfolders = db.relationship(
+        'Folder',
+        backref=db.backref('parent', remote_side=[id]),
+        lazy='dynamic'
+    )
 
-class Folder:
-    def __init__(self, name):
-        self.name = name
-        self.books = []
+    def get_all_books(self):
+        """Get all books from this folder and its subfolders"""
+        all_books = self.books[:]
+        for subfolder in self.subfolders:
+            all_books.extend(subfolder.get_all_books())
+        return all_books
 
-    def to_dict(self):
-        return {
-            'name': self.name,
-            'books': [book.to_dict() for book in self.books]
-        }
+class PDFPosition(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    book_id = db.Column(db.String(36), db.ForeignKey('book.id'), nullable=False)
+    page = db.Column(db.Integer, default=1)
+    last_updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
-def load_users():
-    try:
-        with open('users.json', 'r') as f:
-            return [User(**user) for user in json.load(f)]
-    except FileNotFoundError:
-        return []
+    __table_args__ = (db.UniqueConstraint('user_id', 'book_id', name='unique_user_book'),)
 
-def save_users(users):
-    with open('users.json', 'w') as f:
-        json.dump([user.__dict__ for user in users], f)
-
-def load_books():
-    try:
-        with open('books.json', 'r') as f:
-            return [Book(**book) for book in json.load(f)]
-    except FileNotFoundError:
-        return []
-
-def save_books(books):
-    with open('books.json', 'w') as f:
-        json.dump([book.to_dict() for book in books], f)
-
-def load_folders():
-    try:
-        with open('folders.json', 'r') as f:
-            return [Folder(**folder) for folder in json.load(f)]
-    except FileNotFoundError:
-        return []
-
-def save_folders(folders):
-    with open('folders.json', 'w') as f:
-        json.dump([folder.to_dict() for folder in folders], f)
+class UserSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    theme = db.Column(db.String(10), default='light')  # 'light' or 'dark'
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    __table_args__ = (db.UniqueConstraint('user_id', name='unique_user_settings'),)

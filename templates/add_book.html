@@ -2,25 +2,188 @@
 
 {% block content %}
 <div class="form-container">
-    <h2>Add Book</h2>
-    <form method="POST" action="{{ url_for('add_book') }}" enctype="multipart/form-data">
-        <label for="title">Title</label>
-        <input type="text" name="title" id="title" required>
-        <label for="yearlevel">Year Level</label>
-        <input type="text" name="yearlevel" id="yearlevel" required>
-        <label for="course">Course</label>
-        <input type="text" name="course" id="course" required>
-        <label for="description">Description</label>
-        <textarea name="description" id="description" required></textarea>
-        <label for="folder">Folder</label>
-        <select name="folder" id="folder" required>
-            {% for folder in folders %}
-            <option value="{{ folder.name }}">{{ folder.name }}</option>
-            {% endfor %}
-        </select>
-        <label for="pdf">PDF</label>
-        <input type="file" name="pdf" id="pdf" required>
-        <button type="submit">Add Book</button>
+    <div class="form-header">
+        <h2>Add New Book</h2>
+        <p class="form-subtitle">Add a new book to the library</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('add_book') }}" enctype="multipart/form-data" class="styled-form">
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label" for="title">
+                    <span class="label-icon">📚</span>
+                    Title
+                </label>
+                <input type="text" name="title" id="title" class="form-input" required placeholder="Enter book title">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="yearlevel">
+                    <span class="label-icon">📅</span>
+                    Year Level
+                </label>
+                <input type="text" name="yearlevel" id="yearlevel" class="form-input" required placeholder="e.g., First Year">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="course">
+                    <span class="label-icon">🎓</span>
+                    Course
+                </label>
+                <input type="text" name="course" id="course" class="form-input" required placeholder="e.g., Computer Science">
+            </div>
+
+            <div class="form-group full-width">
+                <label class="form-label" for="description">
+                    <span class="label-icon">📝</span>
+                    Description
+                </label>
+                <textarea name="description" id="description" class="form-input" required 
+                    placeholder="Enter book description" rows="4"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="folder">
+                    <span class="label-icon">📁</span>
+                    Folder
+                </label>
+                <select name="folder" id="folder" class="form-input">
+                    <option value="">No Folder</option>
+                    {% for folder in folders %}
+                        {% if folder.parent %}
+                            <option value="{{ folder.id }}">{{ folder.name }} (in {{ folder.parent.name }})</option>
+                        {% else %}
+                            <option value="{{ folder.id }}">{{ folder.name }}</option>
+                        {% endif %}
+                        {% for subfolder in folder.subfolders %}
+                            <option value="{{ subfolder.id }}">{{ subfolder.name }} (in {{ folder.name }})</option>
+                        {% endfor %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="pdf">
+                    <span class="label-icon">📄</span>
+                    PDF File
+                </label>
+                <div class="file-input-container">
+                    <input type="file" name="pdf" id="pdf" class="file-input" required accept=".pdf">
+                    <label for="pdf" class="file-input-label">Choose File</label>
+                    <span class="file-name">No file chosen</span>
+                </div>
+                <div class="file-preview" style="display: none;">
+                    <div class="file-info">
+                        <span class="file-icon">📄</span>
+                        <div class="file-details">
+                            <span class="file-preview-name"></span>
+                            <span class="file-size"></span>
+                        </div>
+                        <button type="button" class="btn-icon remove-file" title="Remove file">❌</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <span class="btn-icon">➕</span>
+                Add Book
+            </button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
     </form>
 </div>
+
+<div class="upload-overlay" id="uploadOverlay" style="display: none;">
+    <div class="upload-content">
+        <div class="upload-spinner"></div>
+        <h3>Uploading Book...</h3>
+        <p class="upload-progress">0%</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const fileInput = document.querySelector('.file-input');
+const filePreview = document.querySelector('.file-preview');
+const fileName = document.querySelector('.file-name');
+const filePreviewName = document.querySelector('.file-preview-name');
+const fileSize = document.querySelector('.file-size');
+const form = document.querySelector('form');
+
+fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        fileName.textContent = file.name;
+        filePreviewName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        filePreview.style.display = 'block';
+        
+        // Animate the preview
+        filePreview.style.opacity = '0';
+        filePreview.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            filePreview.style.opacity = '1';
+            filePreview.style.transform = 'translateY(0)';
+        }, 50);
+    } else {
+        fileName.textContent = 'No file chosen';
+        filePreview.style.display = 'none';
+    }
+});
+
+document.querySelector('.remove-file').addEventListener('click', function() {
+    fileInput.value = '';
+    fileName.textContent = 'No file chosen';
+    filePreview.style.display = 'none';
+});
+
+form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const overlay = document.getElementById('uploadOverlay');
+    const progressText = overlay.querySelector('.upload-progress');
+    
+    try {
+        overlay.style.display = 'flex';
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action, true);
+        
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                progressText.textContent = Math.round(percentComplete) + '%';
+            }
+        };
+        
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                window.location.href = '{{ url_for("index") }}';
+            } else {
+                throw new Error('Upload failed');
+            }
+        };
+        
+        xhr.onerror = function() {
+            throw new Error('Upload failed');
+        };
+        
+        xhr.send(formData);
+    } catch (error) {
+        alert('Error uploading file: ' + error.message);
+        overlay.style.display = 'none';
+    }
+});
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+</script>
 {% endblock %}

@@ -4,33 +4,142 @@
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-header">
-            <h2>Welcome Back</h2>
-            <p class="auth-subtitle">Please sign in to continue</p>
+            <h2 class="auth-title">Welcome Back</h2>
+            <p class="auth-subtitle">Sign in to access your account</p>
         </div>
-        
+
         <form method="POST" class="auth-form">
             <div class="form-group">
-                <label class="form-label" for="username">Username</label>
-                <div class="input-group">
-                    <span class="input-icon">👤</span>
-                    <input type="text" id="username" name="username" class="form-input" required>
+                <label for="username" class="form-label">Username</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔑</span>
+                    <input type="text" id="username" name="username" class="form-input" placeholder="Enter your username" required>
                 </div>
             </div>
-            
+
             <div class="form-group">
-                <label class="form-label" for="password">Password</label>
-                <div class="input-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-wrapper">
                     <span class="input-icon">🔒</span>
-                    <input type="password" id="password" name="password" class="form-input" required>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
                 </div>
             </div>
-            
-            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </div>
         </form>
-        
+
         <div class="auth-footer">
-            <p>Don't have an account? <a href="{{ url_for('register') }}" class="text-primary">Sign up</a></p>
+            <p>Don't have an account? <a href="{{ url_for('register') }}" class="link">Sign up</a></p>
         </div>
     </div>
 </div>
 {% endblock %}
+
+<style>
+/* General Styles */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #4a90e2, #50c9c3);
+    font-family: 'Arial', sans-serif;
+}
+
+.auth-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+
+.auth-header {
+    margin-bottom: 1.5rem;
+}
+
+.auth-title {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    font-size: 1rem;
+    color: #777;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 10px;
+    color: #aaa;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 10px 10px 35px;
+    font-size: 0.95rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus {
+    border-color: #4a90e2;
+}
+
+.btn {
+    display: inline-block;
+    background: #4a90e2;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 100%;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background: #4072b3;
+}
+
+.auth-footer {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.link {
+    color: #4a90e2;
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+</style>

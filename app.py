@@ -5,8 +5,6 @@ from models import db, User, Book, Folder, PDFPosition, UserSettings
 from datetime import datetime
 from flask_cors import CORS
 
-
-
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['UPLOAD_FOLDER'] = 'uploads/'
@@ -453,7 +451,5 @@ def inject_user_settings():
 
 if __name__ == '__main__':
     with app.app_context():
-        db.drop_all()  # Drop all tables
-        db.create_all()  # Create new tables
         create_default_admin()  # Create default admin user with settings
     app.run(debug=True, port=5001, host="0.0.0.0")
